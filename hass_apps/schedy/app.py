@@ -14,6 +14,7 @@ import importlib
 
 from .. import common
 from . import __version__, config, util
+from .actor.base import Actor
 
 
 __all__ = ["SchedyApp"]
@@ -29,53 +30,24 @@ class SchedyApp(common.App):
         config_schema = config.CONFIG_SCHEMA
 
     def __init__(self, *args: T.Any, **kwargs: T.Any) -> None:
+        self.actor_type = None  # type: T.Optional[T.Type[Actor]]
         self.rooms = []  # type: T.List[Room]
         self.expression_modules = {}  # type: T.Dict[str, types.ModuleType]
         super().__init__(*args, **kwargs)
 
-    def initialize_inner(self) -> None:
-        """Checks the configuration, initializes all timers, state and
-        event callbacks and sets temperatures in all rooms according
-        to the configured schedules."""
+    def _validate_value(self, value: T.Any) -> T.Any:
+        """A wrapper around self.actor_type.validate_value() that sanely
+        logs validation errors and returns None in that case."""
 
-        schedy_id = self.cfg["schedy_id"]
-        self.log("Schedy id is: {}".format(repr(schedy_id)))
-        schedy_id_kwargs = {}
-        if schedy_id != "default":
-            schedy_id_kwargs["schedy_id"] = schedy_id
-
-        self.log("Importing modules for use in expressions.",
-                 level="DEBUG")
-        for mod_name, mod_data in self.cfg["expression_modules"].items():
-            as_name = util.escape_var_name(mod_data.get("as", mod_name))
-            self.log("Importing module {} as {}."
-                     .format(repr(mod_name), repr(as_name)),
-                     level="DEBUG")
-            try:
-                mod = importlib.import_module(mod_name)
-            except Exception as err:  # pylint: disable=broad-except
-                self.log("Error while importing module {}: {}"
-                         .format(repr(mod_name), repr(err)),
-                         level="ERROR")
-                self.log("Module won't be available.", level="ERROR")
-            else:
-                self.expression_modules[as_name] = mod
-
-        for room in self.rooms:
-            room.initialize()
-
-        self.log("Listening for schedy_reschedule event.",
-                 level="DEBUG")
-        self.listen_event(self._reschedule_event_cb, "schedy_reschedule",
-                          **schedy_id_kwargs)
-
-        self.log("Listening for schedy_set_value event.",
-                 level="DEBUG")
-        self.listen_event(self._set_value_event_cb, "schedy_set_value",
-                          **schedy_id_kwargs)
-
-        for room in self.rooms:
-            room.apply_schedule(send=self.cfg["reschedule_at_startup"])
+        assert self.actor_type is not None
+        try:
+            value = self.actor_type.validate_value(value)
+        except ValueError as err:
+            self.log("Invalid value {} for actor type {}: {}"
+                     .format(repr(value), repr(self.actor_type.name), err),
+                     level="ERROR")
+            return None
+        return value
 
     def _reschedule_event_cb(
             self, event: str, data: dict, kwargs: dict
@@ -182,3 +154,50 @@ class SchedyApp(common.App):
             if room.name == room_name:
                 return room
         return None
+
+    def initialize_inner(self) -> None:
+        """Checks the configuration, initializes all timers, state and
+        event callbacks and sets values in all rooms according to the
+        configured schedules."""
+
+        schedy_id = self.cfg["schedy_id"]
+        self.log("Schedy id is: {}".format(repr(schedy_id)))
+        schedy_id_kwargs = {}
+        if schedy_id != "default":
+            schedy_id_kwargs["schedy_id"] = schedy_id
+
+        assert self.actor_type is not None
+        self.log("Actor type is: {}".format(repr(self.actor_type.name)))
+
+        self.log("Importing modules for use in expressions.",
+                 level="DEBUG")
+        for mod_name, mod_data in self.cfg["expression_modules"].items():
+            as_name = util.escape_var_name(mod_data.get("as", mod_name))
+            self.log("Importing module {} as {}."
+                     .format(repr(mod_name), repr(as_name)),
+                     level="DEBUG")
+            try:
+                mod = importlib.import_module(mod_name)
+            except Exception as err:  # pylint: disable=broad-except
+                self.log("Error while importing module {}: {}"
+                         .format(repr(mod_name), repr(err)),
+                         level="ERROR")
+                self.log("Module won't be available.", level="ERROR")
+            else:
+                self.expression_modules[as_name] = mod
+
+        for room in self.rooms:
+            room.initialize()
+
+        self.log("Listening for schedy_reschedule event.",
+                 level="DEBUG")
+        self.listen_event(self._reschedule_event_cb, "schedy_reschedule",
+                          **schedy_id_kwargs)
+
+        self.log("Listening for schedy_set_value event.",
+                 level="DEBUG")
+        self.listen_event(self._set_value_event_cb, "schedy_set_value",
+                          **schedy_id_kwargs)
+
+        for room in self.rooms:
+            room.apply_schedule(send=self.cfg["reschedule_at_startup"])

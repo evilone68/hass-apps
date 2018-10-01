@@ -25,7 +25,6 @@ class Room:
         self.cfg = cfg
         self.app = app
         self.actors = []  # type: T.List[Actor]
-        self.actor_type = None  # type: T.Optional[T.Type[Actor]]
         self.schedule = None  # type: T.Optional[schedule.Schedule]
 
         self.wanted_value = None  # type: T.Any
@@ -81,21 +80,6 @@ class Room:
                  level="DEBUG", prefix=common.LOG_PREFIX_OUTGOING)
         self.app.set_state(entity_id, state=state)
 
-
-    def _validate_value(self, value: T.Any) -> T.Any:
-        """A wrapper around self.actor_type.validate_value() that sanely
-        logs validation errors and returns None in that case."""
-
-        assert self.actor_type is not None
-        try:
-            value = self.actor_type.validate_value(value)
-        except ValueError as err:
-            self.log("Invalid value {} for actor type {}: {}"
-                     .format(repr(value), repr(self.actor_type.name), err),
-                     level="ERROR")
-            return None
-        return value
-
     def apply_schedule(
             self, send: bool = True, force_resend: bool = False
     ) -> None:
@@ -132,9 +116,9 @@ class Room:
             return
 
         self.scheduled_value = value
-        assert self.actor_type is not None
+        assert self.app.actor_type is not None
         self._set_sensor(
-            "scheduled_value", self.actor_type.serialize_value(value)
+            "scheduled_value", self.app.actor_type.serialize_value(value)
         )
 
         if not send:
@@ -169,8 +153,8 @@ class Room:
         extra_env = {
             "room_name": self.name,
         }
-        assert self.actor_type is not None
-        self.actor_type.prepare_eval_environment(extra_env)
+        assert self.app.actor_type is not None
+        self.app.actor_type.prepare_eval_environment(extra_env)
 
         try:
             return expression.eval_expr(expr, self.app, extra_env=extra_env)
@@ -272,7 +256,7 @@ class Room:
                 log("Evaluation failed, skipping rule.",
                     path, level="DEBUG")
             elif isinstance(_result, expression.AddibleMixin):
-                value = self._validate_value(_result.value)
+                value = self.app._validate_value(_result.value)
                 if value is None:
                     continue
                 _result.value = value
@@ -325,16 +309,15 @@ class Room:
         """Should be called after all schedules and actors have been
         added in order to register state listeners and timers."""
 
-        assert self.actor_type is not None
-
-        self.log("Initializing room (name={}, actor_type={})."
-                 .format(repr(self.name), repr(self.actor_type.name)),
+        self.log("Initializing room (name={})."
+                 .format(repr(self.name)),
                  level="DEBUG")
 
         _scheduled_value = self._get_sensor("scheduled_value")
+        assert self.app.actor_type is not None
         try:
-            self.scheduled_value = self.actor_type.validate_value(
-                self.actor_type.deserialize_value(_scheduled_value)
+            self.scheduled_value = self.app.actor_type.validate_value(
+                self.app.actor_type.deserialize_value(_scheduled_value)
             )
         except ValueError:
             self.log("Last scheduled value is unknown.",
@@ -455,7 +438,7 @@ class Room:
                 if _result is not None:
                     value = _result[0]
             elif isinstance(result, expression.Result):
-                value = self._validate_value(result.value)
+                value = self.app._validate_value(result.value)
 
         if value is None:
             self.log("Ignoring value.")

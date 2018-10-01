@@ -49,23 +49,22 @@ def config_post_hook(cfg: dict) -> dict:
     for name, sched in cfg["schedule_snippets"].items():
         sched.name = name
 
+    actor_type = cfg["actor_type"]
+
     # Build room objects.
     rooms = []
     for room_name, room_data in cfg["rooms"].items():
-        actor_type = room_data["actor_type"]
         actors = {}
 
         # copy defaults from templates and validate the actors
-        templates = cfg["actor_defaults"][actor_type.name]
         for actor_name, actor_data in room_data["actors"].items():
             template_name = actor_data.get("template", "default")
             try:
-                template = templates[template_name]
+                template = cfg["actor_templates"][template_name]
             except KeyError:
                 raise vol.ValueInvalid(
-                    "No template named {} has been defined for the "
-                    "{} actor type."
-                    .format(repr(template_name), repr(actor_type.name))
+                    "No template named {} has been defined."
+                    .format(repr(template_name))
                 )
             for key, val in template.items():
                 actor_data.setdefault(key, val)
@@ -74,9 +73,8 @@ def config_post_hook(cfg: dict) -> dict:
             actors[actor_name] = actor_data
 
         # complete the room's schedule.
-        sched = cfg["schedule_prepend"][actor_type.name] + \
-                room_data["schedule"] + \
-                cfg["schedule_append"][actor_type.name]
+        sched = cfg["schedule_prepend"] + room_data["schedule"] + \
+                cfg["schedule_append"]
         sched.name = room_name
 
         del room_data["actors"]
@@ -86,7 +84,6 @@ def config_post_hook(cfg: dict) -> dict:
         rooms.append(room)
 
         # Create actor objects and attach to room.
-        room.actor_type = actor_type
         for actor_name, actor_data in actors.items():
             _actor = actor_type(actor_name, actor_data, room)
             room.actors.append(_actor)
@@ -94,6 +91,7 @@ def config_post_hook(cfg: dict) -> dict:
         room.schedule = sched
 
     del cfg["rooms"], cfg["schedule_prepend"], cfg["schedule_append"]
+    cfg["_app"].actor_type = actor_type
     cfg["_app"].rooms = rooms
 
     return cfg
@@ -230,10 +228,6 @@ ROOM_SCHEMA = vol.Schema(vol.All(
         vol.Optional("replicate_changes", default=True): bool,
         vol.Optional("reschedule_delay", default=0):
             vol.All(int, vol.Range(min=0)),
-        vol.Required("actor_type"): vol.All(
-            vol.Any(*map(lambda a: a.name, actor.get_actor_types())),
-            lambda n: {a.name: a for a in actor.get_actor_types()}[n],
-        ),
         vol.Optional("actors", default=dict): DICTS_IN_DICT_SCHEMA,
         vol.Optional("schedule", default=list): vol.All(
             SCHEDULE_SCHEMA,
@@ -251,26 +245,21 @@ CONFIG_SCHEMA = vol.Schema(vol.All(
         vol.Optional("reschedule_at_startup", default=True): bool,
         vol.Optional("expression_modules", default=dict):
             EXPRESSION_MODULES_SCHEMA,
-        vol.Optional("actor_defaults", default=dict): vol.All(
-            lambda v: v or {},
-            {vol.Optional(actor_type.name, default=dict): vol.All(
-                DICTS_IN_DICT_SCHEMA,
-                lambda v: v.setdefault("default", {}) and False or v,
-            ) for actor_type in actor.get_actor_types()},
+        vol.Required("actor_type"): vol.All(
+            vol.Any(*map(lambda a: a.name, actor.get_actor_types())),
+            lambda n: {a.name: a for a in actor.get_actor_types()}[n],
         ),
-        vol.Optional("schedule_prepend", default=dict): vol.All(
-            lambda v: v or {},
-            {vol.Optional(actor_type.name, default=list): vol.All(
-                SCHEDULE_SCHEMA,
-                validate_rule_paths,
-            ) for actor_type in actor.get_actor_types()},
+        vol.Optional("actor_templates", default=dict): vol.All(
+            DICTS_IN_DICT_SCHEMA,
+            lambda v: v.setdefault("default", {}) and False or v,
         ),
-        vol.Optional("schedule_append", default=dict): vol.All(
-            lambda v: v or {},
-            {vol.Optional(actor_type.name, default=list): vol.All(
-                SCHEDULE_SCHEMA,
-                validate_rule_paths,
-            ) for actor_type in actor.get_actor_types()},
+        vol.Optional("schedule_prepend", default=list): vol.All(
+            SCHEDULE_SCHEMA,
+            validate_rule_paths,
+        ),
+        vol.Optional("schedule_append", default=list): vol.All(
+            SCHEDULE_SCHEMA,
+            validate_rule_paths,
         ),
         vol.Optional("schedule_snippets", default=dict):
             SCHEDULE_SNIPPETS_SCHEMA,
