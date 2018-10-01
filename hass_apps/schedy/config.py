@@ -240,7 +240,6 @@ ROOM_SCHEMA = vol.Schema(vol.All(
 
 CONFIG_SCHEMA = vol.Schema(vol.All(
     vol.Schema({
-        vol.Optional("schedy_id", default="default"): str,
         vol.Optional("reschedule_at_startup", default=True): bool,
         vol.Optional("expression_modules", default=dict):
             EXPRESSION_MODULES_SCHEMA,

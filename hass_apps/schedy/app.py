@@ -56,11 +56,11 @@ class SchedyApp(common.App):
         data may contain a "room_name", which limits the re-scheduling
         to the given room."""
 
-        schedy_id = data.get("schedy_id", self.cfg["schedy_id"])
-        if schedy_id != self.cfg["schedy_id"]:
-            self.log("Ignoring re-schedule event for schedy_id '{}', "
+        app_name = data.get("app_name", self.name)
+        if app_name != self.name:
+            self.log("Ignoring re-schedule event for app_name '{}', "
                      "ours is '{}'."
-                     .format(schedy_id, self.cfg["schedy_id"]),
+                     .format(app_name, self.name),
                      level="DEBUG")
             return
 
@@ -97,11 +97,11 @@ class SchedyApp(common.App):
         to True, the value is re-sent to the actorss even if it hasn't
         changed."""
 
-        schedy_id = data.get("schedy_id", self.cfg["schedy_id"])
-        if schedy_id != self.cfg["schedy_id"]:
-            self.log("Ignoring set_temp event for schedy_id '{}', "
+        app_name = data.get("app_name", self.name)
+        if app_name != self.name:
+            self.log("Ignoring set_temp event for app_name '{}', "
                      "ours is '{}'."
-                     .format(schedy_id, self.cfg["schedy_id"]),
+                     .format(app_name, self.name),
                      level="DEBUG")
             return
 
@@ -160,12 +160,6 @@ class SchedyApp(common.App):
         event callbacks and sets values in all rooms according to the
         configured schedules."""
 
-        schedy_id = self.cfg["schedy_id"]
-        self.log("Schedy id is: {}".format(repr(schedy_id)))
-        schedy_id_kwargs = {}
-        if schedy_id != "default":
-            schedy_id_kwargs["schedy_id"] = schedy_id
-
         assert self.actor_type is not None
         self.log("Actor type is: {}".format(repr(self.actor_type.name)))
 
@@ -192,12 +186,12 @@ class SchedyApp(common.App):
         self.log("Listening for schedy_reschedule event.",
                  level="DEBUG")
         self.listen_event(self._reschedule_event_cb, "schedy_reschedule",
-                          **schedy_id_kwargs)
+                          app_name=self.name)
 
         self.log("Listening for schedy_set_value event.",
                  level="DEBUG")
         self.listen_event(self._set_value_event_cb, "schedy_set_value",
-                          **schedy_id_kwargs)
+                          app_name=self.name)
 
         for room in self.rooms:
             room.apply_schedule(send=self.cfg["reschedule_at_startup"])
