@@ -41,7 +41,7 @@ class Room:
         """Returns the state value of the sensor for given parameter in HA."""
 
         entity_id = "sensor.schedy_{}_room_{}_{}" \
-                    .format(self.app.cfg["schedy_id"], self.name, param)
+                    .format(self.app.name, self.name, param)
         self.log("Querying state of {}."
                  .format(repr(entity_id)),
                  level="DEBUG", prefix=common.LOG_PREFIX_OUTGOING)
@@ -74,7 +74,7 @@ class Room:
         """Updates the sensor for given parameter in HA."""
 
         entity_id = "sensor.schedy_{}_room_{}_{}" \
-                    .format(self.app.cfg["schedy_id"], self.name, param)
+                    .format(self.app.name, self.name, param)
         self.log("Setting state of {} to {}."
                  .format(repr(entity_id), repr(state)),
                  level="DEBUG", prefix=common.LOG_PREFIX_OUTGOING)
