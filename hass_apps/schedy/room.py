@@ -2,6 +2,7 @@
 This module implements the Room class.
 """
 
+import types
 import typing as T
 if T.TYPE_CHECKING:
     # pylint: disable=cyclic-import,unused-import
@@ -142,7 +143,7 @@ class Room:
         return True
 
     def eval_expr(
-            self, expr: expression.ExprType
+            self, expr: types.CodeType
     ) -> T.Union[expression.ResultBase, None, Exception]:
         """This is a wrapper around expression.eval_expr that adds
         the room_name to the evaluation environment, as well as all
@@ -205,7 +206,7 @@ class Room:
                  level="DEBUG")
 
         result = None
-        expr_cache = {}  # type: T.Dict[expression.ExprType, T.Union[expression.ResultBase, None, Exception]]
+        expr_cache = {}  # type: T.Dict[types.CodeType, T.Union[expression.ResultBase, None, Exception]]
         paths = []  # type: T.List[schedule.RulePath]
         insert_paths(paths, 0, schedule.RulePath(sched), rules)
         path_idx = 0
@@ -353,7 +354,7 @@ class Room:
         self.app.log(msg, *args, **kwargs)
 
     def notify_set_value_event(
-            self, expr: expression.ExprType = None, value: T.Any = None,
+            self, expr_raw: str = None, value: T.Any = None,
             force_resend: bool = False,
             reschedule_delay: T.Union[float, int, None] = None
     ) -> None:
@@ -361,11 +362,12 @@ class Room:
 
         self.log("schedy_set_value event received, {}"
                  .format(
-                     "expression={}".format(repr(expr)) if expr is not None \
+                     "expression={}".format(repr(expr_raw)) \
+                     if expr_raw is not None \
                      else "value={}".format(repr(value))
                  ))
         self.set_value_manually(
-            expr=expr, value=value, force_resend=force_resend,
+            expr_raw=expr_raw, value=value, force_resend=force_resend,
             reschedule_delay=reschedule_delay
         )
 
@@ -413,7 +415,7 @@ class Room:
                      prefix=common.LOG_PREFIX_OUTGOING)
 
     def set_value_manually(
-            self, expr: expression.ExprType = None, value: T.Any = None,
+            self, expr_raw: str = None, value: T.Any = None,
             force_resend: bool = False,
             reschedule_delay: T.Union[float, int, None] = None
     ) -> None:
@@ -422,14 +424,15 @@ class Room:
         started if re-schedule timers are configured. reschedule_delay,
         if given, overwrites the value configured for the room."""
 
-        checks = (expr is None, value is None)
+        checks = (expr_raw is None, value is None)
         assert any(checks) and not all(checks), \
-            "specify exactly one of expr and value"
+            "specify exactly one of expr_raw and value"
 
-        if expr is not None:
+        if expr_raw is not None:
+            expr = expression.compile_expr(expr_raw)
             result = self.eval_expr(expr)
             self.log("Evaluated expression {} to {}."
-                     .format(repr(expr), repr(result)),
+                     .format(repr(expr_raw), repr(result)),
                      level="DEBUG")
 
             value = None

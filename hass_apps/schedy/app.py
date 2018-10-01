@@ -127,7 +127,7 @@ class SchedyApp(common.App):
             return
 
         room.notify_set_value_event(
-            expr=expr, value=value,
+            expr_raw=expr, value=value,
             force_resend=bool(data.get("force_resend")),
             reschedule_delay=reschedule_delay
         )

@@ -2,21 +2,17 @@
 Module containing functionality to evaluate expressions.
 """
 
+import types
 import typing as T
 if T.TYPE_CHECKING:
     # pylint: disable=cyclic-import,unused-import
     from . import schedule
     from .app import SchedyApp
-import types
 
 import datetime
 
 
 __all__ = ["Abort", "Add", "Break", "IncludeSchedule", "Result", "Skip"]
-
-
-# type of an evaluable expression
-ExprType = T.Union[str, types.CodeType]
 
 
 class AddibleMixin:
@@ -121,23 +117,35 @@ def build_expr_env(app: "SchedyApp") -> T.Dict[str, T.Any]:
 
     return env
 
+def compile_expr(expr: str) -> types.CodeType:
+    """Compiles strings to code objects.
+    Strings without a newline are treated as simple expressions, strings
+    with one or more newlines are assumed to contain whole statements
+    already."""
+
+    if "\n" not in expr:
+        expr = "result = {}".format(expr)
+    return compile(expr, "expr", "exec")
+
 def eval_expr(
-        expr: ExprType,
-        app: "SchedyApp",
+        expr: types.CodeType, app: "SchedyApp",
         extra_env: T.Optional[T.Dict[str, T.Any]] = None
-) -> ResultBase:
+) -> T.Optional[ResultBase]:
     """This method evaluates the given expression. The evaluation result
     is returned. The items of the extra_env dict are added to the globals
     available during evaluation."""
 
-    # pylint: disable=eval-used
+    # pylint: disable=exec-used
 
     env = build_expr_env(app)
     if extra_env:
         env.update(extra_env)
 
-    eval_result = eval(expr, env)
+    exec(expr, env)
+    eval_result = env.get("result")
 
+    if eval_result is None:
+        return None
     if not isinstance(eval_result, ResultBase):
         return Result(eval_result)
     return eval_result

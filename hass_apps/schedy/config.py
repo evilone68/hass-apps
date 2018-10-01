@@ -24,7 +24,7 @@ def build_schedule_rule(rule: dict) -> schedule.Rule:
         "end_time": rule["end"],
         "end_plus_days": rule["end_plus_days"],
         "constraints": constraints,
-        "expr": rule.get("expression"),
+        "expr_raw": rule.get("expression"),
         "value": rule.get("value"),
     }
 

@@ -3,6 +3,9 @@ This module implements the Schedule and Rule classes.
 """
 
 import typing as T
+if T.TYPE_CHECKING:
+    # pylint: disable=cyclic-import,unused-import
+    import types
 
 import datetime
 
@@ -20,11 +23,11 @@ class Rule:
             self, name: str = None,
             start_time: datetime.time = None, end_time: datetime.time = None,
             end_plus_days: int = None, constraints: T.Dict[str, T.Any] = None,
-            expr: expression.ExprType = None, value: T.Any = None,
+            expr_raw: str = None, value: T.Any = None,
         ) -> None:
 
-        if expr is not None and value is not None:
-            raise ValueError("specify only one of expr and value, not both")
+        if expr_raw is not None and value is not None:
+            raise ValueError("specify only one of expr_raw and value, not both")
 
         self.name = name
 
@@ -51,15 +54,12 @@ class Rule:
             self.end_time = midnight
             self.end_plus_days = 1
 
-        self.expr = None  # type: T.Optional[expression.ExprType]
+        self.expr = None  # type: T.Optional[types.CodeType]
         self.expr_raw = None  # type: T.Optional[str]
-        if expr is not None:
-            if isinstance(expr, str):
-                expr = expr.strip()
-                self.expr_raw = expr
-                self.expr = compile(expr, "expr", "eval")
-            else:
-                self.expr = expr
+        if expr_raw is not None:
+            expr_raw = expr_raw.strip()
+            self.expr_raw = expr_raw
+            self.expr = expression.compile_expr(expr_raw)
 
         self.value = value
 
