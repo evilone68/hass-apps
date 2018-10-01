@@ -48,6 +48,18 @@ class RangingSet(set):
         ))
 
 
+def deep_merge_dicts(source: dict, dest: dict) -> None:
+    """Inserts missing items from source into dest, descending into
+    child dictionaries as well."""
+
+    for key, value in source.items():
+        if isinstance(value, dict):
+            node = dest.setdefault(key, {})
+            if isinstance(node, dict):
+                deep_merge_dicts(value, node)
+        else:
+            dest.setdefault(key, value)
+
 def escape_var_name(name: str) -> str:
     """Converts the given string to a valid Python variable name.
     All unsupported characters are replaced by "_". If name would

@@ -66,8 +66,7 @@ def config_post_hook(cfg: dict) -> dict:
                     "No template named {} has been defined."
                     .format(repr(template_name))
                 )
-            for key, val in template.items():
-                actor_data.setdefault(key, val)
+            util.deep_merge_dicts(template, actor_data)
             actor_data = ACTOR_SCHEMA(actor_data)
             actor_data = actor_type.config_schema(actor_data)
             actors[actor_name] = actor_data
