@@ -256,7 +256,7 @@ class Room:
                 log("Evaluation failed, skipping rule.",
                     path, level="DEBUG")
             elif isinstance(_result, expression.AddibleMixin):
-                value = self.app._validate_value(_result.value)
+                value = self.app.validate_value(_result.value)
                 if value is None:
                     continue
                 _result.value = value
@@ -438,7 +438,7 @@ class Room:
                 if _result is not None:
                     value = _result[0]
             elif isinstance(result, expression.Result):
-                value = self.app._validate_value(result.value)
+                value = self.app.validate_value(result.value)
 
         if value is None:
             self.log("Ignoring value.")
