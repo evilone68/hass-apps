@@ -15,7 +15,10 @@ from .base import Actor
 STATE_DEF_SCHEMA = vol.Schema(vol.All(
     lambda v: v or {},
     {
-        vol.Required("service"): str,
+        vol.Required("service"): vol.All(
+            str,
+            lambda v: v.replace(".", "/", 1),
+        ),
         vol.Optional("service_data", default=dict): vol.All(
             lambda v: v or {},
             dict,
@@ -39,6 +42,15 @@ class Generic(Actor):
     name = "generic"
     config_schema = CONFIG_SCHEMA
 
+    def _get_state_cfg(self, state: str) -> T.Any:
+        """Returns the state configuration for given state or None,
+        if unknown. _other is respected as well."""
+
+        try:
+            return self.cfg["states"][state]
+        except KeyError:
+            return self.cfg["states"].get("_other")
+
     @staticmethod
     def deserialize_value(value: str) -> T.Any:
         """Deserializes value from JSON."""
@@ -51,8 +63,8 @@ class Generic(Actor):
     def do_send(self) -> None:
         """Executes the service configured for self.wanted_value."""
 
-        cfg = self.cfg["states"][self.wanted_value]
-        service = cfg["service"].replace(".", "/", 1)
+        cfg = self._get_state_cfg(self.wanted_value)
+        service = cfg["service"]
         service_data = copy.copy(cfg["service_data"])
         if cfg["include_entity_id"]:
             service_data.setdefault("entity_id", self.entity_id)
@@ -65,7 +77,7 @@ class Generic(Actor):
     def filter_set_value(self, value: T.Any) -> T.Any:
         """Checks whether the actor supports this state."""
 
-        if value in self.cfg["states"]:
+        if self._get_state_cfg(value) is not None:
             return value
 
         self.log("State {} is not known by this generic actor, "
