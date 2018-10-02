@@ -108,6 +108,12 @@ class SchedyApp(common.App):
             expr = None
             value = None
             if "expression" in data:
+                if not self.cfg["expressions_from_events"]:
+                    self.log("Received a schedy_set_temp event with an "
+                             "expression, but expressions_from_events is "
+                             "not enabled in your config. Ignoring event.",
+                             level="ERROR")
+                    raise ValueError()
                 expr = data["expression"]
             elif "value" in data:
                 value = data["value"]
