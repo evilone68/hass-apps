@@ -27,11 +27,15 @@ STATE_DEF_SCHEMA = vol.Schema(vol.All(
     },
 ))
 
+WILDCARD_STATE_NAME_SCHEMA = vol.Schema(vol.All(
+    str, str.lower, "_other_",
+))
+
 CONFIG_SCHEMA = vol.Schema({
     vol.Optional("state_attr", default="state"): vol.Any(str, None),
     vol.Optional("states", default=dict): vol.All(
         lambda v: v or {},
-        {vol.Extra: STATE_DEF_SCHEMA},
+        {vol.Any(WILDCARD_STATE_NAME_SCHEMA, vol.Extra): STATE_DEF_SCHEMA},
     ),
 }, extra=True)
 
@@ -44,12 +48,12 @@ class Generic(Actor):
 
     def _get_state_cfg(self, state: str) -> T.Any:
         """Returns the state configuration for given state or None,
-        if unknown. _other is respected as well."""
+        if unknown. _other_ is respected as well."""
 
         try:
             return self.cfg["states"][state]
         except KeyError:
-            return self.cfg["states"].get("_other")
+            return self.cfg["states"].get("_other_")
 
     @staticmethod
     def deserialize_value(value: str) -> T.Any:
