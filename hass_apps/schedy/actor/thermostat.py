@@ -413,6 +413,10 @@ class Thermostat(Actor):
     def serialize_value(value: Temp) -> str:
         """Wrapper around Temp.serialize()."""
 
+        if not isinstance(value, Temp):
+            raise ValueError(
+                "can only serialize Temp objects, not {}".format(repr(value))
+            )
         return value.serialize()
 
     @staticmethod

@@ -57,8 +57,8 @@ class Generic(Actor):
 
         try:
             return json.loads(value)
-        except (TypeError, json.JSONDecodeError):
-            raise ValueError("invalid JSON data")
+        except (TypeError, json.JSONDecodeError) as err:
+            raise ValueError("invalid JSON data: {}".format(repr(err)))
 
     def do_send(self) -> None:
         """Executes the service configured for self.wanted_value."""
@@ -111,7 +111,10 @@ class Generic(Actor):
     def serialize_value(value: T.Any) -> str:
         """Serializes value to JSON."""
 
-        return json.dumps(value)
+        try:
+            return json.dumps(value)
+        except TypeError as err:
+            raise ValueError("can't serialize to JSON: {}".format(err))
 
     @staticmethod
     def validate_value(value: T.Any) -> T.Any:

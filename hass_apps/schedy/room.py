@@ -81,6 +81,20 @@ class Room:
                  level="DEBUG", prefix=common.LOG_PREFIX_OUTGOING)
         self.app.set_state(entity_id, state=state)
 
+    def _validate_value(self, value: T.Any) -> T.Any:
+        """A wrapper around self.app.actor_type.validate_value() that
+        sanely logs validation errors and returns None in that case."""
+
+        assert self.app.actor_type is not None
+        try:
+            value = self.app.actor_type.validate_value(value)
+        except ValueError as err:
+            self.log("Invalid value {} for actor type {}: {}"
+                     .format(repr(value), repr(self.app.actor_type.name), err),
+                     level="ERROR")
+            return None
+        return value
+
     def apply_schedule(
             self, send: bool = True, force_resend: bool = False
     ) -> None:
@@ -118,9 +132,14 @@ class Room:
 
         self.scheduled_value = value
         assert self.app.actor_type is not None
-        self._set_sensor(
-            "scheduled_value", self.app.actor_type.serialize_value(value)
-        )
+        try:
+            self._set_sensor(
+                "scheduled_value", self.app.actor_type.serialize_value(value)
+            )
+        except ValueError as err:
+            self.log("Can't store scheduling result in HA: {}"
+                     .format(err),
+                     level="ERROR")
 
         if not send:
             self.log("Not actually setting the value due to send = False.",
@@ -257,7 +276,7 @@ class Room:
                 log("Evaluation failed, skipping rule.",
                     path, level="DEBUG")
             elif isinstance(_result, expression.AddibleMixin):
-                value = self.app.validate_value(_result.value)
+                value = self._validate_value(_result.value)
                 if value is None:
                     continue
                 _result.value = value
@@ -441,7 +460,7 @@ class Room:
                 if _result is not None:
                     value = _result[0]
             elif isinstance(result, expression.Result):
-                value = self.app.validate_value(result.value)
+                value = self._validate_value(result.value)
 
         if value is None:
             self.log("Ignoring value.")

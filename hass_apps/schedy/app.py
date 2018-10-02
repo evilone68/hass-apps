@@ -187,17 +187,3 @@ class SchedyApp(common.App):
 
         for room in self.rooms:
             room.apply_schedule(send=self.cfg["reschedule_at_startup"])
-
-    def validate_value(self, value: T.Any) -> T.Any:
-        """A wrapper around self.actor_type.validate_value() that sanely
-        logs validation errors and returns None in that case."""
-
-        assert self.actor_type is not None
-        try:
-            value = self.actor_type.validate_value(value)
-        except ValueError as err:
-            self.log("Invalid value {} for actor type {}: {}"
-                     .format(repr(value), repr(self.actor_type.name), err),
-                     level="ERROR")
-            return None
-        return value
