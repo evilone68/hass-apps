@@ -22,6 +22,7 @@ STATE_DEF_SCHEMA = vol.Schema(vol.All(
             dict,
         ),
         vol.Optional("include_entity_id", default=True): bool,
+        vol.Optional("value_param", default=None): vol.Any(str, None),
     },
 ))
 
@@ -61,6 +62,8 @@ class Generic(Actor):
         service_data = cfg["service_data"].copy()
         if cfg["include_entity_id"]:
             service_data.setdefault("entity_id", self.entity_id)
+        if cfg["value_param"] is not None:
+            service_data.setdefault(cfg["value_param"], self.wanted_value)
 
         self.log("Calling service {}, data = {}."
                  .format(repr(service), repr(service_data)),
