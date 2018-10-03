@@ -5,12 +5,13 @@ This package contains the various actor implementations.
 import typing as T
 
 from .base import Actor
+from .custom import CustomActor
 from .generic import Generic
 from .switch import Switch
 from .thermostat import Thermostat
 
 
-__all__ = ["Actor", "Generic", "Switch", "Thermostat"]
+__all__ = ["Actor", "CustomActor", "Generic", "Switch", "Thermostat"]
 
 
 def get_actor_types() -> T.Iterable[T.Type[Actor]]:

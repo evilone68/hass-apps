@@ -4,8 +4,6 @@ This module implements the generic actor.
 
 import typing as T
 
-import copy
-import json
 import voluptuous as vol
 
 from ... import common
@@ -55,21 +53,12 @@ class Generic(Actor):
         except KeyError:
             return self.cfg["states"].get("_other_")
 
-    @staticmethod
-    def deserialize_value(value: str) -> T.Any:
-        """Deserializes value from JSON."""
-
-        try:
-            return json.loads(value)
-        except (TypeError, json.JSONDecodeError) as err:
-            raise ValueError("invalid JSON data: {}".format(repr(err)))
-
     def do_send(self) -> None:
         """Executes the service configured for self.wanted_value."""
 
         cfg = self._get_state_cfg(self.wanted_value)
         service = cfg["service"]
-        service_data = copy.copy(cfg["service_data"])
+        service_data = cfg["service_data"].copy()
         if cfg["include_entity_id"]:
             service_data.setdefault("entity_id", self.entity_id)
 
@@ -110,18 +99,3 @@ class Generic(Actor):
                      prefix=common.LOG_PREFIX_INCOMING)
             self.current_value = state
             self.events.trigger("value_changed", self, state)
-
-    @staticmethod
-    def serialize_value(value: T.Any) -> str:
-        """Serializes value to JSON."""
-
-        try:
-            return json.dumps(value)
-        except TypeError as err:
-            raise ValueError("can't serialize to JSON: {}".format(err))
-
-    @staticmethod
-    def validate_value(value: T.Any) -> T.Any:
-        """Accepts any value."""
-
-        return value
