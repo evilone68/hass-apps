@@ -117,16 +117,6 @@ def build_expr_env(app: "SchedyApp") -> T.Dict[str, T.Any]:
 
     return env
 
-def compile_expr(expr: str) -> types.CodeType:
-    """Compiles strings to code objects.
-    Strings without a newline are treated as simple expressions, strings
-    with one or more newlines are assumed to contain whole statements
-    already."""
-
-    if "\n" not in expr:
-        expr = "result = {}".format(expr)
-    return compile(expr, "expr", "exec")
-
 def eval_expr(
         expr: types.CodeType, app: "SchedyApp",
         extra_env: T.Optional[T.Dict[str, T.Any]] = None

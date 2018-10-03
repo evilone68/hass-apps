@@ -2,6 +2,7 @@
 Utility functions that are used everywhere inside Heaty.
 """
 
+import types
 import typing as T
 
 import collections
@@ -128,6 +129,17 @@ def build_date_from_constraint(
             elif fields["month"] > 12:
                 fields["month"] = 1
                 fields["year"] += 1
+
+def compile_expression(expr: str) -> types.CodeType:
+    """Compiles strings to code objects.
+    Strings with one or more newlines are assumed to contain whole
+    statements already.
+    Strings without newlines are treated as simple expressions and
+    "result = " is prepended to them before compilation."""
+
+    if "\n" not in expr:
+        expr = "result = {}".format(expr)
+    return compile(expr, "expr", "exec")
 
 def format_sensor_value(value: T.Any) -> str:
     """Formats values as strings for usage as HA sensor state.

@@ -448,7 +448,7 @@ class Room:
             "specify exactly one of expr_raw and value"
 
         if expr_raw is not None:
-            expr = expression.compile_expr(expr_raw)
+            expr = util.compile_expression(expr_raw)
             result = self.eval_expr(expr)
             self.log("Evaluated expression {} to {}."
                      .format(repr(expr_raw), repr(result)),

@@ -9,7 +9,7 @@ if T.TYPE_CHECKING:
 
 import datetime
 
-from . import expression, util
+from . import util
 
 
 class Rule:
@@ -59,7 +59,7 @@ class Rule:
         if expr_raw is not None:
             expr_raw = expr_raw.strip()
             self.expr_raw = expr_raw
-            self.expr = expression.compile_expr(expr_raw)
+            self.expr = util.compile_expression(expr_raw)
 
         self.value = value
 

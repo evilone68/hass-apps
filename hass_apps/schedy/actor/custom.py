@@ -9,22 +9,22 @@ import re
 import voluptuous as vol
 
 from ... import common
-from .. import expression
+from .. import util
 from .base import ActorBase
 
 
 CONFIG_SCHEMA = vol.Schema({
     "filter_value": vol.All(
         str,
-        expression.compile_expr,
+        util.compile_expression,
     ),
     "send": vol.All(
         str,
-        expression.compile_expr,
+        util.compile_expression,
     ),
     "state_to_value": vol.All(
         str,
-        expression.compile_expr,
+        util.compile_expression,
     ),
     vol.Optional("config", default=dict): vol.All(
         lambda v: v or {},
