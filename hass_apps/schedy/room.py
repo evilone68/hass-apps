@@ -8,7 +8,7 @@ if T.TYPE_CHECKING:
     # pylint: disable=cyclic-import,unused-import
     import uuid
     from .app import SchedyApp
-    from .actor.base import Actor
+    from .actor.base import ActorBase
 
 import datetime
 
@@ -25,7 +25,7 @@ class Room:
         self.name = name
         self.cfg = cfg
         self.app = app
-        self.actors = []  # type: T.List[Actor]
+        self.actors = []  # type: T.List[ActorBase]
         self.schedule = None  # type: T.Optional[schedule.Schedule]
 
         self.wanted_value = None  # type: T.Any
@@ -391,7 +391,7 @@ class Room:
         )
 
     def notify_value_changed(
-            self, actor: "Actor", value: T.Any  # pylint: disable=unused-argument
+            self, actor: "ActorBase", value: T.Any  # pylint: disable=unused-argument
     ) -> None:
         """Should be called when the value has been changed externally
         by manual adjustment at an actor."""

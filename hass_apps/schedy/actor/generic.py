@@ -7,7 +7,7 @@ import typing as T
 import voluptuous as vol
 
 from ... import common
-from .base import Actor
+from .base import ActorBase
 
 
 STATE_DEF_SCHEMA = vol.Schema(vol.All(
@@ -39,7 +39,7 @@ CONFIG_SCHEMA = vol.Schema({
 }, extra=True)
 
 
-class Generic(Actor):
+class GenericActor(ActorBase):
     """A configurable, generic actor for Schedy."""
 
     name = "generic"

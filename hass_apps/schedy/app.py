@@ -14,7 +14,7 @@ import importlib
 
 from .. import common
 from . import __version__, config, util
-from .actor.base import Actor
+from .actor.base import ActorBase
 
 
 __all__ = ["SchedyApp"]
@@ -30,7 +30,7 @@ class SchedyApp(common.App):
         config_schema = config.CONFIG_SCHEMA
 
     def __init__(self, *args: T.Any, **kwargs: T.Any) -> None:
-        self.actor_type = None  # type: T.Optional[T.Type[Actor]]
+        self.actor_type = None  # type: T.Optional[T.Type[ActorBase]]
         self.rooms = []  # type: T.List[Room]
         self.expression_modules = {}  # type: T.Dict[str, types.ModuleType]
         super().__init__(*args, **kwargs)

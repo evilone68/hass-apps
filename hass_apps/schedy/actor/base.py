@@ -16,7 +16,7 @@ import voluptuous as vol
 from ... import common
 
 
-class Actor:
+class ActorBase:
     """An actor to be controlled by Heaty."""
 
     name = "actor"

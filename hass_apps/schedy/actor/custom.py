@@ -10,7 +10,7 @@ import voluptuous as vol
 
 from ... import common
 from .. import expression
-from .base import Actor
+from .base import ActorBase
 
 
 CONFIG_SCHEMA = vol.Schema({
@@ -33,7 +33,7 @@ CONFIG_SCHEMA = vol.Schema({
 }, extra=True)
 
 
-class CustomActor(Actor):
+class CustomActor(ActorBase):
     """A fully customizable actor for Schedy."""
 
     name = "custom"

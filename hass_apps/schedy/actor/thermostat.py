@@ -11,7 +11,7 @@ import functools
 import voluptuous as vol
 
 from ... import common
-from .base import Actor
+from .base import ActorBase
 
 
 # allowed types of values to initialize Temp() with
@@ -186,7 +186,7 @@ CONFIG_SCHEMA = vol.Schema({
 }, extra=True)
 
 
-class Thermostat(Actor):
+class ThermostatActor(ActorBase):
     """A thermostat to be controlled by Schedy."""
 
     name = "thermostat"
@@ -260,7 +260,7 @@ class Thermostat(Actor):
     def deserialize_value(value: str) -> Temp:
         """Deserializes by calling validate_value()."""
 
-        return Thermostat.validate_value(value)
+        return ThermostatActor.validate_value(value)
 
     def do_send(self) -> None:
         """Sends self.wanted_value to the thermostat."""

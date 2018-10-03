@@ -4,7 +4,7 @@ This module implements a binary on/off switch, derived from the generic actor.
 
 import voluptuous as vol
 
-from .generic import Generic
+from .generic import GenericActor
 
 
 CONFIG_SCHEMA = vol.Schema(vol.All(
@@ -16,11 +16,11 @@ CONFIG_SCHEMA = vol.Schema(vol.All(
             "service": "homeassistant/turn_off",
         },
     }) and False or v,
-    Generic.config_schema,
+    GenericActor.config_schema,
 ))
 
 
-class Switch(Generic):
+class SwitchActor(GenericActor):
     """A binary on/off switch actor for Schedy."""
 
     name = "switch"
