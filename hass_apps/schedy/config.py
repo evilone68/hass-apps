@@ -169,9 +169,9 @@ ACTOR_SCHEMA = vol.Schema(vol.All(
     lambda v: v or {},
     vol.Schema({
         "friendly_name": str,
-        vol.Optional("send_tries", default=10):
+        vol.Optional("send_retries", default=10):
             vol.All(int, vol.Range(min=-1)),
-        vol.Optional("resend_interval", default=30):
+        vol.Optional("send_retry_interval", default=30):
             vol.All(int, vol.Range(min=1)),
     }, extra=True),
 ))

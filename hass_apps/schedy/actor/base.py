@@ -62,7 +62,7 @@ class ActorBase:
         if not left_tries:
             return
 
-        interval = self.cfg["resend_interval"]
+        interval = self.cfg["send_retry_interval"]
         self.log("Re-sending in {} seconds."
                  .format(interval),
                  level="DEBUG")
@@ -218,7 +218,7 @@ class ActorBase:
             return False
 
         self.cancel_resend_timer()
-        self._resend_cb({"left_tries": self.cfg["send_tries"]})
+        self._resend_cb({"left_tries": self.cfg["send_retries"] - 1})
         return True
 
     @staticmethod
