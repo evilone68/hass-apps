@@ -46,6 +46,7 @@ class CustomActor(ActorBase):
         result or None, if unset or an error occured."""
 
         env = env.copy()
+        env.setdefault("app", self.app)
         env.setdefault("config", self.cfg["config"])
         env.setdefault("re", re)
 
