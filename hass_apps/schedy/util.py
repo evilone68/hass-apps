@@ -1,5 +1,5 @@
 """
-Utility functions that are used everywhere inside Heaty.
+Utility functions that are used all around Schedy.
 """
 
 import types

@@ -17,7 +17,7 @@ from ... import common
 
 
 class ActorBase:
-    """An actor to be controlled by Heaty."""
+    """An actor to be controlled by Schedy."""
 
     name = "actor"
     config_schema = vol.Schema(object)

@@ -25,7 +25,7 @@ class SchedyApp(common.App):
 
     class Meta(common.App.Meta):
         # pylint: disable=missing-docstring
-        name = "heaty"
+        name = "schedy"
         version = __version__
         config_schema = config.CONFIG_SCHEMA
 
@@ -38,7 +38,7 @@ class SchedyApp(common.App):
     def _reschedule_event_cb(
             self, event: str, data: dict, kwargs: dict
     ) -> None:
-        """This callback executes when a heaty_reschedule event is received.
+        """This callback executes when a schedy_reschedule event is received.
         data may contain a "room_name", which limits the re-scheduling
         to the given room."""
 
@@ -54,8 +54,9 @@ class SchedyApp(common.App):
         if room_name:
             room = self.get_room(room_name)
             if not room:
-                self.log("Ignoring heaty_reschedule event for "
-                         "unknown room {}.".format(room_name),
+                self.log("Ignoring schedy_reschedule event for "
+                         "unknown room {}."
+                         .format(repr(room_name)),
                          level="WARNING")
                 return
             rooms = [room]
@@ -127,8 +128,8 @@ class SchedyApp(common.App):
 
         room = self.get_room(room_name)
         if not room:
-            self.log("Ignoring heaty_set_temp event for unknown "
-                     "room {}.".format(room_name),
+            self.log("Ignoring schedy_set_temp event for unknown room {}."
+                     .format(repr(room_name)),
                      level="WARNING")
             return
 
